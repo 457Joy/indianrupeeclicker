@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Rupee Clicker</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Include Font Awesome for icons (if not already included) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- How to Play Popup -->
+    <button id="how-to-play-btn" class="help-btn"><i class="fas fa-question-circle"></i> How to Play</button>
+    <div id="how-to-play-popup" class="popup-container">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2><i class="fas fa-info-circle"></i> How to Play</h2>
+                <button class="close-popup">&times;</button>
+            </div>
+            <div class="popup-body">
+                <div class="tab-buttons">
+                    <button class="active" data-tab="basics">Basics</button>
+                    <button data-tab="features">Features</button>
+                    <button data-tab="strategies">Strategies</button>
+                    <button data-tab="achievements">Achievements</button>
+                    <button data-tab="credits">Credits</button>
+                </div>
+                <div id="basics" class="tab-content active">
+                    <h3><i class="fas fa-play"></i> Getting Started</h3>
+                    <ul>
+                        <li>Click the button to earn rupees</li>
+                        <li>Invest in businesses for passive income</li>
+                        <li>Upgrade your click power</li>
+                    </ul>
+                </div>
+                <div id="features" class="tab-content">
+                    <h3><i class="fas fa-star"></i> Game Features</h3>
+                    <ul>
+                        <li>Business Upgrades</li>
+                        <li>Stock Market</li>
+                        <li>Regional Development</li>
+                    </ul>
+                </div>
+                <div id="strategies" class="tab-content">
+                    <h3><i class="fas fa-lightbulb"></i> Tips & Strategies</h3>
+                    <ul>
+                        <li>Balance clicking and passive income</li>
+                        <li>Claim daily bonuses</li>
+                        <li>Prestige when progress slows</li>
+                    </ul>
+                </div>
+                <div id="achievements" class="tab-content">
+                    <h3><i class="fas fa-trophy"></i> Achievements</h3>
+                    <!-- Achievements content can be added later -->
+                </div>
+                <div id="credits" class="tab-content">
+                    <h3><i class="fas fa-users"></i> Credits</h3>
+                    <p>Developed by 457Joy</p>
+                    <p>Icons provided by Font Awesome</p>
+                    <p>Charts powered by Chart.js</p>
+                    <p>Head Developer: Jonas Ho</p>
+                    <p>Development Advisor: Ison Hon</p>
+                    <p>Programming Advisor: Shawn Yan</p>
+                    <p>Original Game Design: Hingsen Yang</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Billionaire Popup -->
+    <div id="billionaire-popup" class="popup-container">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2><i class="fas fa-crown"></i> Congratulations!</h2>
+                <button class="close-popup">&times;</button>
+            </div>
+            <div class="popup-body">
+                <h3>You've Become a Billionaire!</h3>
+                <p>Your empire has reached ₹1,000,000,000!</p>
+                <div class="billionaire-buttons">
+                    <button onclick="shareAchievement('whatsapp')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                    <button onclick="shareAchievement('wechat')"><i class="fab fa-weixin"></i> WeChat</button>
+                    <button onclick="shareAchievement('x')"><i class="fab fa-x-twitter"></i> X</button>
+                    <button onclick="shareAchievement('instagram')"><i class="fab fa-instagram"></i> Instagram</button>
+                </div>
+                <div class="billionaire-buttons">
+                    <button onclick="resetGameState(); hidePopup('billionaire-popup')"><i class="fas fa-redo"></i> Start Over</button>
+                    <button onclick="hidePopup('billionaire-popup')"><i class="fas fa-play"></i> Keep Playing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div id="home-page" class="page active">
+        <div class="home-container">
+            <div class="game-logo">
+                <i class="fas fa-rupee-sign"></i>
+                <h1>Indian Rupee Clicker</h1>
+                <span>Version 8.2.6</span>
+            </div>
+            <div class="account-box">
+                <h2>Account</h2>
+                <select id="account-select"></select>
+                <input type="text" id="account-name" placeholder="Enter new account name">
+                <div class="account-buttons">
+                    <button onclick="createAccount()"><i class="fas fa-plus"></i> Create</button>
+                    <button onclick="loadGame(document.getElementById('account-select').value)"><i class="fas fa-download"></i> Load</button>
+                    <button onclick="saveGame()"><i class="fas fa-save"></i> Save</button>
+                </div>
+                <div class="account-status">Playing as: <span id="current-account">Guest</span></div>
+            </div>
+            <div class="achievements-box">
+                <h2>Achievements <i class="fas fa-trophy"></i></h2>
+                <div class="achievements-grid">
+                    <!-- Achievements can be added dynamically -->
+                </div>
+            </div>
+            <div class="main-nav">
+                <button class="nav-btn" onclick="showPage('clicker')"><i class="fas fa-hand-pointer"></i> Rupee Clicker</button>
+                <button class="nav-btn" onclick="showPage('development')"><i class="fas fa-map"></i> Develop India</button>
+                <button class="nav-btn" onclick="showPage('stocks')"><i class="fas fa-chart-line"></i> Stock Market</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="clicker-page" class="page">
+        <div class="game-header">
+            <button class="back-btn" onclick="showPage('home')"><i class="fas fa-arrow-left"></i> Menu</button>
+            <h1>Rupee Clicker</h1>
+        </div>
+        <div class="game-main">
+            <div class="primary-panel">
+                <div class="rupee-display-container">
+                    <div id="rupee-display">₹ 0</div>
+                    <div class="income-display">
+                        <span id="total-rps">0 /sec</span>
+                        <span id="total-rpc">1 /click</span>
+                    </div>
+                </div>
+                <button id="click-button" class="main-click-button">CLICK ME! <i class="fas fa-rupee-sign"></i></button>
+                <div class="prestige-container">
+                    <button id="prestige-button" class="prestige-btn">Prestige <span class="prestige-badge" id="prestige-points">0</span></button>
+                </div>
+                <div class="progress-chart-container">
+                    <h3>Rupees Progress</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="rupees-progress-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="secondary-panel">
+                <h2>Business Upgrades <i class="fas fa-building"></i></h2>
+                <div class="upgrades-grid" id="upgrades-grid"></div>
+                <h2>Temporary Power-Ups <i class="fas fa-bolt"></i></h2>
+                <div class="powerups-grid" id="powerups-grid"></div>
+                <div id="active-effects">Active Effects</div>
+                <h2>Mini-Games <i class="fas fa-gamepad"></i></h2>
+                <div class="minigames-grid">
+                    <div class="minigame-card" onclick="playLuckyDraw()">
+                        <div class="minigame-icon">🎲</div>
+                        <div class="minigame-name">Lucky Draw</div>
+                        <div class="minigame-desc">Test your luck for instant rewards!</div>
+                        <div class="minigame-cost">50₹ per play</div>
+                    </div>
+                    <div class="minigame-card" onclick="playGamble()">
+                        <div class="minigame-icon">🎲🎲</div>
+                        <div class="minigame-name">Gambling</div>
+                        <div class="minigame-desc">Double sixes to win big!</div>
+                        <div class="minigame-cost">100₹ per play</div>
+                    </div>
+                    <div class="minigame-card" id="daily-bonus-button" onclick="claimDailyBonus()">
+                        <div class="minigame-icon">🎁</div>
+                        <div class="minigame-name">Daily Bonus</div>
+                        <div class="minigame-desc">Claim your daily reward!</div>
+                        <div class="minigame-cost" id="daily-bonus-streak">🔥 Streak: 0 days</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="development-page" class="page">
+        <div class="game-header">
+            <button class="back-btn" onclick="showPage('home')"><i class="fas fa-arrow-left"></i> Menu</button>
+            <h1>Develop India</h1>
+        </div>
+        <div class="development-container">
+            <div class="map-section">
+                <h2>India Development Map</h2>
+                <div class="map-container">
+                    <div id="north" class="region" data-region="north"></div>
+                    <div id="south" class="region" data-region="south"></div>
+                    <div id="east" class="region" data-region="east"></div>
+                    <div id="west" class="region" data-region="west"></div>
+                    <div id="central" class="region" data-region="central"></div>
+                    <div id="northeast" class="region" data-region="northeast"></div>
+                </div>
+                <div class="region-tabs">
+                    <button class="region-tab active" data-region="north">North</button>
+                    <button class="region-tab" data-region="south">South</button>
+                    <button class="region-tab" data-region="east">East</button>
+                    <button class="region-tab" data-region="west">West</button>
+                    <button class="region-tab" data-region="central">Central</button>
+                    <button class="region-tab" data-region="northeast">Northeast</button>
+                </div>
+                <div id="region-details"></div>
+            </div>
+            <div class="figures-section">
+                <h2>Historical Figures <i class="fas fa-user"></i></h2>
+                <div id="historical-figures"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stocks-page" class="page">
+        <div class="game-header">
+            <button class="back-btn" onclick="showPage('home')"><i class="fas fa-arrow-left"></i> Menu</button>
+            <h1>Stock Market</h1>
+        </div>
+        <div class="stocks-container">
+            <div class="portfolio-summary">
+                <h2>Portfolio Summary</h2>
+                <div class="portfolio-stats">
+                    <div>Total Value: <span id="portfolio-total">₹0.00</span></div>
+                    <div>Invested: <span id="portfolio-invested">₹0.00</span></div>
+                    <div>Profit/Loss: <span id="portfolio-profit">₹0.00</span></div>
+                </div>
+            </div>
+            <div id="update-count">Updates: 0 | Last Updated: Just now</div>
+            <div class="stocks-grid" id="stocks-grid"></div>
+        </div>
+    </div>
+
+    <!-- Persistent Navigation -->
+    <div class="persistent-nav">
+        <button class="persistent-nav-btn" onclick="showPage('clicker')"><i class="fas fa-hand-pointer"></i><span class="nav-label">Clicker</span></button>
+        <button class="persistent-nav-btn" onclick="showPage('development')"><i class="fas fa-map"></i><span class="nav-label">Develop</span></button>
+        <button class="persistent-nav-btn" onclick="showPage('stocks')"><i class="fas fa-chart-line"></i><span class="nav-label">Stocks</span></button>
+    </div>
+
+    <!-- Message Popup -->
+    <div id="message" class="message-popup"></div>
+
+    <!-- Audio Elements -->
+    <audio id="click-sound" src="click.mp3"></audio>
+    <audio id="upgrade-sound" src="upgrade.mp3"></audio>
+    <audio id="buy-sound" src="buy.mp3"></audio>
+    <audio id="sell-sound" src="sell.mp3"></audio>
+    <audio id="luck-sound" src="luck.mp3"></audio>
+    <audio id="dice-sound" src="dice.mp3"></audio>
+    <audio id="bonus-sound" src="bonus.mp3"></audio>
+
+    <!-- Include Backendless SDK -->
+    <script src="https://api.backendless.com/sdk/js/latest/backendless.min.js"></script>
+    <!-- Include Chart.js for the rupees chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Your custom script -->
+    <script src="script.js"></script>
+</body>
+</html>
