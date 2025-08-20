@@ -1,0 +1,2 @@
+# indianrupeeclicker
+Indian Rupee Clicker
