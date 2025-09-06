@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indian Rupee Clicker</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Include Font Awesome for icons (if not already included) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -103,6 +102,7 @@
                 <h2>Account</h2>
                 <select id="account-select"></select>
                 <input type="text" id="account-name" placeholder="Enter new account name">
+                <input type="password" id="account-password" placeholder="Enter password">
                 <div class="account-buttons">
                     <button onclick="createAccount()"><i class="fas fa-plus"></i> Create</button>
                     <button onclick="loadGame(document.getElementById('account-select').value)"><i class="fas fa-download"></i> Load</button>

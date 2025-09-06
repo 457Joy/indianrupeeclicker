@@ -642,17 +642,58 @@ function updateRupeesChart() {
 
 // Backendless Initialization
 function initBackendless() {
-    Backendless.initApp('https://api.backendless.com', '44235209-F78F-4736-9290-6D4B051A1BCC'); // Replace with your actual APP_ID and JS_API_KEY
+    Backendless.initApp('YOUR_APP_ID', 'YOUR_JS_API_KEY'); // Replace with your actual values
 }
 
-// Modified saveGame to use Backendless
+// New createAccount function
+function createAccount() {
+    const accountName = document.getElementById('account-name').value.trim();
+    const password = document.getElementById('account-password').value.trim();
+    if (!accountName || !password) {
+        showMessage("Please enter both account name and password!");
+        return;
+    }
+
+    const whereClause = `accountName = '${accountName}'`;
+    const queryBuilder = Backendless.DataQueryBuilder.create().setWhereClause(whereClause);
+
+    Backendless.Data.of("GameSaves").find(queryBuilder)
+        .then(function(results) {
+            if (results.length > 0) {
+                showMessage("Account name already exists!");
+                return;
+            }
+
+            const saveData = getSaveData();
+            const dataToSave = {
+                accountName: accountName,
+                password: password,
+                saveData: JSON.stringify(saveData)
+            };
+
+            Backendless.Data.of("GameSaves").save(dataToSave)
+                .then(function() {
+                    currentAccount = accountName;
+                    document.getElementById('account-name').value = "";
+                    document.getElementById('account-password').value = "";
+                    updateAccountList();
+                    showMessage(`Account ${accountName} created and saved!`);
+                })
+                .catch(function(error) {
+                    console.error('Error creating account:', error);
+                    showMessage("Failed to create account! Check connection.");
+                });
+        })
+        .catch(function(error) {
+            console.error('Error checking existing account:', error);
+            showMessage("Failed to create account! Check connection.");
+        });
+}
+
+// Modified saveGame to use Backendless only
 function saveGame() {
-    if (currentAccount === "Guest") {
-        // Fallback to localStorage for Guest
-        const allSaves = JSON.parse(localStorage.getItem('rupeeClickerSaves')) || {};
-        allSaves[currentAccount] = getSaveData();
-        localStorage.setItem('rupeeClickerSaves', JSON.stringify(allSaves));
-        showMessage(`Game saved locally for ${currentAccount}!`);
+    if (!currentAccount || currentAccount === "Guest") {
+        showMessage("Please create or load an account first!");
         return;
     }
 
@@ -662,27 +703,25 @@ function saveGame() {
 
     Backendless.Data.of("GameSaves").find(queryBuilder)
         .then(function(results) {
+            if (results.length === 0) {
+                showMessage("Account not found! Create an account first.");
+                return;
+            }
+
             const dataToSave = {
+                objectId: results[0].objectId,
                 accountName: currentAccount,
+                password: results[0].password, // Retain the original password
                 saveData: JSON.stringify(saveData)
             };
 
-            if (results.length > 0) {
-                // Update existing record
-                dataToSave.objectId = results[0].objectId;
-            }
-
             Backendless.Data.of("GameSaves").save(dataToSave)
                 .then(function() {
-                    showMessage(`Game saved to cloud for ${currentAccount}!`);
+                    showMessage(`Game saved for ${currentAccount}!`);
                 })
                 .catch(function(error) {
                     console.error('Error saving to Backendless:', error);
-                    showMessage("Failed to save to cloud! Using local save.");
-                    // Fallback to local
-                    const allSaves = JSON.parse(localStorage.getItem('rupeeClickerSaves')) || {};
-                    allSaves[currentAccount] = saveData;
-                    localStorage.setItem('rupeeClickerSaves', JSON.stringify(allSaves));
+                    showMessage("Failed to save! Check connection.");
                 });
         })
         .catch(function(error) {
@@ -712,17 +751,16 @@ function getSaveData() {
     };
 }
 
-// Modified loadGame to use Backendless
+// Modified loadGame to use Backendless only with password check
 function loadGame(accountName = currentAccount) {
-    if (accountName === "Guest") {
-        // Fallback to localStorage for Guest
-        const allSaves = JSON.parse(localStorage.getItem('rupeeClickerSaves')) || {};
-        const saveData = allSaves[accountName];
-        if (!saveData) {
-            showMessage(`No saved data for ${accountName}`);
-            return;
-        }
-        applySaveData(saveData);
+    if (!accountName || accountName === "Guest") {
+        showMessage("Please create or select an account first!");
+        return;
+    }
+
+    const password = prompt(`Enter password for ${accountName}:`);
+    if (!password) {
+        showMessage("Password required to load game!");
         return;
     }
 
@@ -735,24 +773,22 @@ function loadGame(accountName = currentAccount) {
                 showMessage(`No saved data for ${accountName}`);
                 return;
             }
-            const saveData = JSON.parse(results[0].saveData);
+            const savedData = results[0];
+            if (savedData.password !== password) {
+                showMessage("Incorrect password!");
+                return;
+            }
+
+            const saveData = JSON.parse(savedData.saveData);
             applySaveData(saveData);
             currentAccount = accountName;
             document.getElementById('account-name').value = accountName;
             updateDisplay();
-            showMessage(`Loaded ${accountName}'s game from cloud!`);
+            showMessage(`Loaded ${accountName}'s game!`);
         })
         .catch(function(error) {
             console.error('Error loading from Backendless:', error);
-            showMessage("Failed to load from cloud! Trying local.");
-            // Fallback to local
-            const allSaves = JSON.parse(localStorage.getItem('rupeeClickerSaves')) || {};
-            const saveData = allSaves[accountName];
-            if (saveData) {
-                applySaveData(saveData);
-            } else {
-                showMessage(`No local data for ${accountName}`);
-            }
+            showMessage("Failed to load! Check connection.");
         });
 }
 
@@ -805,14 +841,16 @@ function applySaveData(saveData) {
     updateAllDisplays();
 }
 
-// Modified deleteAccount to use Backendless
+// Modified deleteAccount to use Backendless only with password check
 function deleteAccount() {
     if (!currentAccount || currentAccount === "Guest") {
         showMessage("Cannot delete Guest account");
         return;
     }
     
-    if (!confirm(`Delete account "${currentAccount}" and all its data?`)) {
+    const password = prompt(`Enter password for ${currentAccount} to delete:`);
+    if (!password) {
+        showMessage("Password required to delete account!");
         return;
     }
 
@@ -821,28 +859,29 @@ function deleteAccount() {
 
     Backendless.Data.of("GameSaves").find(queryBuilder)
         .then(function(results) {
-            if (results.length > 0) {
-                Backendless.Data.of("GameSaves").remove(results[0])
-                    .then(function() {
-                        // Also remove local if exists
-                        const allSaves = JSON.parse(localStorage.getItem('rupeeClickerSaves')) || {};
-                        delete allSaves[currentAccount];
-                        localStorage.setItem('rupeeClickerSaves', JSON.stringify(allSaves));
-                        
-                        currentAccount = "Guest";
-                        document.getElementById('account-name').value = "";
-                        resetGameState();
-                        updateAllDisplays();
-                        updateAccountList();
-                        showMessage(`Deleted account ${currentAccount} from cloud`);
-                    })
-                    .catch(function(error) {
-                        console.error('Error deleting from Backendless:', error);
-                        showMessage("Failed to delete from cloud!");
-                    });
-            } else {
-                showMessage(`No cloud data for ${currentAccount}`);
+            if (results.length === 0) {
+                showMessage(`No data for ${currentAccount}`);
+                return;
             }
+            const savedData = results[0];
+            if (savedData.password !== password) {
+                showMessage("Incorrect password!");
+                return;
+            }
+
+            Backendless.Data.of("GameSaves").remove(savedData)
+                .then(function() {
+                    currentAccount = "Guest";
+                    document.getElementById('account-name').value = "";
+                    resetGameState();
+                    updateAllDisplays();
+                    updateAccountList();
+                    showMessage(`Deleted account ${currentAccount}`);
+                })
+                .catch(function(error) {
+                    console.error('Error deleting from Backendless:', error);
+                    showMessage("Failed to delete! Check connection.");
+                });
         })
         .catch(function(error) {
             console.error('Error finding account to delete:', error);
@@ -896,21 +935,28 @@ function updateAllDisplays() {
 function updateAccountList() {
     const select = document.getElementById('account-select');
     if (!select) return;
-    
-    const allSaves = JSON.parse(localStorage.getItem('rupeeClickerSaves')) || {};
-    select.innerHTML = '<option value="">Select Account</option>';
-    
-    Object.keys(allSaves).forEach(account => {
-        const option = document.createElement('option');
-        option.value = account;
-        option.textContent = account;
-        select.appendChild(option);
-    });
-    
-    // Select current account if it exists
-    if (allSaves[currentAccount]) {
-        select.value = currentAccount;
-    }
+
+    const whereClause = `accountName != 'Guest'`;
+    const queryBuilder = Backendless.DataQueryBuilder.create().setWhereClause(whereClause);
+
+    Backendless.Data.of("GameSaves").find(queryBuilder)
+        .then(function(results) {
+            select.innerHTML = '<option value="">Select Account</option>';
+            results.forEach(result => {
+                const option = document.createElement('option');
+                option.value = result.accountName;
+                option.textContent = result.accountName;
+                select.appendChild(option);
+            });
+
+            if (results.some(result => result.accountName === currentAccount)) {
+                select.value = currentAccount;
+            }
+        })
+        .catch(function(error) {
+            console.error('Error fetching account list:', error);
+            select.innerHTML = '<option value="">Select Account</option>';
+        });
 }
 
 function showMessage(text) {
@@ -1086,7 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Mini-game functions (assuming they exist in your original code)
+// Mini-game functions
 function playLuckyDraw() {
     if (rupees < 50) {
         showMessage("Need ₹50 to play Lucky Draw!");
